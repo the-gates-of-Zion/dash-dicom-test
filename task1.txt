@@ -1,0 +1,2 @@
+With dash and /ui
+Read dicom files from temp in bkend and draw UI
