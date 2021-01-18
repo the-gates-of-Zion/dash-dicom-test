@@ -6,42 +6,45 @@ import plotly.express as px
 
 import pandas as pd
 
+
+#https://dash.plotly.com/canvas
+import dash
+import dash_html_components as html
+from dash_canvas import DashCanvas
+import numpy as np
 import pydicom
+import cv2
+import os
+import imageio
+#dataset = pydicom.dcmread('./data/DICOM/I0')
+inputdir = './data/DICOM/'
+outdir = './assets/'
 
-dataset = pydicom.dcmread('./data/DICOM/I0')
+test_list = [ f for f in  os.listdir(inputdir)]
+if(True):
+    for f in test_list:   
+        ds = pydicom.read_file(inputdir + f, force=True) # read dicom image
+        img = ds.pixel_array # get image array
+        cv2.imwrite(outdir + f + ".png" ,img) # write png image
+        #imageio.imwrite(outdir + f.replace('.dcm','.jp2'), img)
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv')
+app = dash.Dash(__name__)
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+filename = " http://127.0.0.1:8050/"+'ID_0060_AGE_0080_CONTRAST_0_CT.dcm.png'
+filename_s = 'ID_0060_AGE_0080_CONTRAST_0_CT.dcm.png'
+canvas_width = 500
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([
-    dcc.Graph(id='graph-with-slider'),
-    dcc.Slider(
-        id='year-slider',
-        min=df['year'].min(),
-        max=df['year'].max(),
-        value=df['year'].min(),
-        marks={str(year): str(year) for year in df['year'].unique()},
-        step=None
-    )
-])
-
-
-@app.callback(
-    Output('graph-with-slider', 'figure'),
-    Input('year-slider', 'value'))
-def update_figure(selected_year):
-    filtered_df = df[df.year == selected_year]
-
-    fig = px.scatter(filtered_df, x="gdpPercap", y="lifeExp",
-                     size="pop", color="continent", hover_name="country",
-                     log_x=True, size_max=55)
-
-    fig.update_layout(transition_duration=500)
-
-    return fig
+    #html.Img(src=app.get_asset_url(filename_s)),
+    
+    DashCanvas(id='canvas_image',
+               tool='line',
+               lineWidth=5,
+               lineColor='red',
+               filename=app.get_asset_url(filename_s),
+               width=canvas_width)
+    ])
 
 
 if __name__ == '__main__':
